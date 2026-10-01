@@ -85,6 +85,22 @@ def generate(query: str, context: list[str]) -> str:
     context_text = "\n\n".join(context)
     return chain.invoke({"question": query, "context": context_text})
 
+def generate_stream(query: str, context: list[str]):
+    """
+    stream the grounded answer chunk by chunk as it is generated.
+    same prompt/model/chain as generate() -we just call .stream() instead
+    of .invoke(). Because the chain ends in StrOutputParser(), each yielded
+     chunk is already plan str, so no content unpacking is needed.
+
+     Yields:
+            str: succesive pieces of the answer. empty chunks are skipped are skipped so the caller can
+            clock time to first token on the first visible token.
+    """
+    contect_text = "\n\n".join(context)
+    for chunk in chain.stream({"question": query, "context": contect_text}):
+        if chunk:
+            yield chunk
+
 
 # quick manual test: python src/generator.py
 if __name__ == "__main__":
